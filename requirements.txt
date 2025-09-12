@@ -1,0 +1,5 @@
+gmqtt==0.7.0
+nvidia-ml-py==13.580.82
+paho-mqtt==2.1.0
+psutil==7.0.0
+pynvml==13.0.1
