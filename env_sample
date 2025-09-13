@@ -1,0 +1,9 @@
+# .env
+MQTT_BROKER=localhost
+MQTT_PORT=1883
+TOPIC=devices/+/metrics
+WS_HOST=0.0.0.0
+WS_PORT=6789
+PRUNE_SECONDS=30
+CPU_ALERT_TH=90
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
