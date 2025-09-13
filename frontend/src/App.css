@@ -1,0 +1,34 @@
+.App {
+  font-family: system-ui, Arial, sans-serif;
+  padding: 20px;
+}
+
+.device-card {
+  background: #fff;               /* fundo branco */
+  margin: 16px auto;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  width: 95%;
+  max-width: 980px;
+}
+
+.device-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.device-header h2 {
+  color: #222;                   /* nome do device bem escuro */
+  margin: 0;
+}
+
+.badge {
+  background: #eef;
+  color: #334;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid #cfe;
+}
