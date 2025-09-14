@@ -1,6 +1,6 @@
 name: Pylint
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -23,6 +23,16 @@ jobs:
           pip install -r requirements.txt
           pip install pylint
 
-      - name: Run pylint
-        run: |
-          pylint $(git ls-files '*.py')
+      - name: Run Pylint and update badge
+        uses: Silleellie/pylint-github-action@v2.1
+        with:
+          lint-path: $(git ls-files '*.py')
+          python-version: "3.12"
+          requirements-path: requirements.txt
+          pylintrc-path: .pylintrc
+          readme-path: README.md
+          badge-text: PyLint
+          color-bad-score: red
+          color-ok-score: orange
+          color-good-score: yellow
+          color-perfect-score: brightgreen
