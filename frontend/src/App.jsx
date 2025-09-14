@@ -17,7 +17,7 @@ function ensureArrayHistory(prev, deviceId) {
 }
 
 function normalizePoint(p) {
-  // formata timestamp e garante números (0..100) quando possível
+  // timestamp format
   const ts =
     typeof p.timestamp === "number"
       ? p.timestamp * 1000
@@ -49,7 +49,7 @@ export default function App() {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("✅ WS conectado");
+        console.log("✅ WS connected");
         if (reconnectTimer.current) {
           clearTimeout(reconnectTimer.current);
           reconnectTimer.current = null;
@@ -59,9 +59,6 @@ export default function App() {
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          // msg pode ser:
-          // 1) estado inicial: { dev1: {...}, dev2: {...} }
-          // 2) delta: { devX: {...} }
           const entries = Object.entries(msg);
           setHistories((prev) => {
             let next = { ...prev };
@@ -69,18 +66,18 @@ export default function App() {
               const point = normalizePoint(pointRaw);
               next = ensureArrayHistory(next, deviceId);
               const arr = next[deviceId].concat(point);
-              // limita histórico
+              // history limit
               next[deviceId] = arr.slice(-MAX_POINTS);
             }
             return next;
           });
         } catch (e) {
-          console.warn("Mensagem WS inválida:", e);
+          console.warn("Invalid WS message:", e);
         }
       };
 
       ws.onclose = () => {
-        console.log("❌ WS desconectado — tentando reconectar em 2s…");
+        console.log("❌ WS disconnected — trying to reconnect in 2s…");
         reconnectTimer.current = setTimeout(connect, 2000);
       };
 
@@ -101,8 +98,8 @@ export default function App() {
 
   return (
     <div className="App">
-      <h1>📊 Dashboard de Métricas</h1>
-      {deviceIds.length === 0 && <p>Aguardando métricas...</p>}
+      <h1>📊 Metrics Dashboard</h1>
+      {deviceIds.length === 0 && <p>Waiting for metrics...</p>}
 
       {deviceIds.map((deviceId) => {
         const data = histories[deviceId];
@@ -112,23 +109,22 @@ export default function App() {
               <h2>{deviceId}</h2>
               {data?.length ? (
                 <span className="badge">
-                  última: {data[data.length - 1].timestampLabel}
+                  last: {data[data.length - 1].timestampLabel}
                 </span>
               ) : null}
             </div>
             <ResponsiveContainer width="95%" height={260}>
               <LineChart data={data}>
-              <XAxis dataKey="timestampLabel" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="cpu_percent" name="CPU %" stroke="#e74c3c" />   {/* vermelho */}
-              <Line type="monotone" dataKey="mem_percent" name="RAM %" stroke="#3498db" />   {/* azul */}
-              <Line type="monotone" dataKey="disk_percent" name="Disco %" stroke="#2ecc71" /> {/* verde */}
-              <Line type="monotone" dataKey="gpu_percent" name="GPU %" stroke="#f39c12" />   {/* laranja */}
-            </LineChart>
-          </ResponsiveContainer>
-
+                <XAxis dataKey="timestampLabel" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="cpu_percent" name="CPU %" stroke="#e74c3c" />   {/* red */}
+                <Line type="monotone" dataKey="mem_percent" name="RAM %" stroke="#3498db" />   {/* blue */}
+                <Line type="monotone" dataKey="disk_percent" name="Disk %" stroke="#2ecc71" />  {/* green */}
+                <Line type="monotone" dataKey="gpu_percent" name="GPU %" stroke="#f39c12" />   {/* orange */}
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         );
       })}

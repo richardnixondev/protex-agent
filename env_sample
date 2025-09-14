@@ -1,9 +1,19 @@
-# .env
-MQTT_BROKER=localhost
-MQTT_PORT=1883
+MQTT_BROKER=XXXXAAAAFFFBBBB.REGION.amazonaws.com
+MQTT_PORT=8883
 TOPIC=devices/+/metrics
+
+#websocket from backend
 WS_HOST=0.0.0.0
 WS_PORT=6789
 PRUNE_SECONDS=30
 CPU_ALERT_TH=90
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXXXXXXXXX/YYYYYY
+DEVICE_ID=YourDeviceID
+
+# collect data every 10s
+INTERVAL=10
+
+# Certificates (exact file names in your agent directory)
+CA_CERT=AmazonRootCA1.pem
+CLIENT_CERT=clientcert-certificate.pem.crt
+CLIENT_KEY=clientkey-private.pem.key
