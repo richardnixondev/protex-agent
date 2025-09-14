@@ -1,45 +1,47 @@
 import asyncio
 import json
-import psutil
-import subprocess
-import time
 import os
 import ssl
+import subprocess
+import time
+import psutil
 from gmqtt import Client as MQTTClient
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-DEVICE_ID   = os.getenv("DEVICE_ID", "device-iot-001")
+DEVICE_ID = os.getenv("DEVICE_ID", "device-iot-001")
 MQTT_BROKER = os.getenv("MQTT_BROKER")  # AWS IoT endpoint (xxx-ats.iot.<region>.amazonaws.com)
-MQTT_PORT   = int(os.getenv("MQTT_PORT", 8883))
-CA_CERT     = os.getenv("CA_CERT", "AmazonRootCA1.pem")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
+CA_CERT = os.getenv("CA_CERT", "AmazonRootCA1.pem")
 CLIENT_CERT = os.getenv("CLIENT_CERT", "device.cert.pem")
-CLIENT_KEY  = os.getenv("CLIENT_KEY", "device.private.key")
-INTERVAL    = int(os.getenv("INTERVAL", 10))
-TOPIC       = f"devices/{DEVICE_ID}/metrics"
+CLIENT_KEY = os.getenv("CLIENT_KEY", "device.private.key")
+INTERVAL = int(os.getenv("INTERVAL", "10"))
+TOPIC = f"devices/{DEVICE_ID}/metrics"
 
 # Process reference to measure agent overhead
 process = psutil.Process(os.getpid())
 
 
 def collect_metrics():
-    """Collects CPU, RAM, Disk, GPU (if available) and self-metrics (agent)."""
+    """Collect CPU, RAM, Disk, GPU (if available) and agent self-metrics."""
     cpu = psutil.cpu_percent(interval=None)
     mem = psutil.virtual_memory().percent
-    disk = psutil.disk_usage('/').percent
+    disk = psutil.disk_usage("/").percent
 
     try:
         out = subprocess.check_output(
-            ["nvidia-smi",
-             "--query-gpu=utilization.gpu,memory.used,memory.total",
-             "--format=csv,noheader,nounits"]
+            [
+                "nvidia-smi",
+                "--query-gpu=utilization.gpu,memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ]
         ).decode().strip()
-        gpu_util, mem_used, mem_total = out.split(",")
+        gpu_util, _, _ = out.split(",")
         gpu = float(gpu_util)
-    except Exception:
-        gpu = None  # no GPU available
+    except Exception:  # noqa: BLE001
+        gpu = None  # No GPU available
 
     agent_mem = process.memory_info().rss / (1024 * 1024)  # MB
     agent_cpu = process.cpu_percent(interval=None)  # %
@@ -52,18 +54,19 @@ def collect_metrics():
         "disk_percent": disk,
         "gpu_percent": gpu,
         "agent_cpu_percent": agent_cpu,
-        "agent_mem_mb": agent_mem
+        "agent_mem_mb": agent_mem,
     }
 
 
 async def main():
+    """Main loop: connect to MQTT broker and periodically publish metrics."""
     client = MQTTClient(DEVICE_ID)
 
-    # Event handlers
-    def on_connect(c, flags, rc, properties):
+    # Event handlers (unused args prefixed with _ to satisfy linting)
+    def on_connect(_client, _flags, _rc, _properties):
         print(f"[{DEVICE_ID}] ✅ Connected to AWS IoT Core")
 
-    def on_disconnect(c, packet, exc=None):
+    def on_disconnect(_client, _packet, _exc=None):
         print(f"[{DEVICE_ID}] ❌ Disconnected from AWS IoT Core")
 
     client.on_connect = on_connect
@@ -86,8 +89,10 @@ async def main():
                 print(f"⚠️ WARN: CPU > 90% ({metrics['cpu_percent']}%)")
 
             # Debug: agent self resource usage
-            print(f"[DEBUG] agent_cpu={metrics['agent_cpu_percent']}%, "
-                  f"agent_mem={metrics['agent_mem_mb']:.2f} MB")
+            print(
+                f"[DEBUG] agent_cpu={metrics['agent_cpu_percent']}%, "
+                f"agent_mem={metrics['agent_mem_mb']:.2f} MB"
+            )
 
             # Publish metrics to AWS IoT Core
             client.publish(TOPIC, json.dumps(metrics), qos=1, retain=False)
