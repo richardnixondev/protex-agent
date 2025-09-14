@@ -72,7 +72,7 @@ The backend exposes a WebSocket server at ws://localhost:6789
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
 The dashboard will be available at: http://localhost:5173
