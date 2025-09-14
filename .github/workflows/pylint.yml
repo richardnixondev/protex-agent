@@ -26,7 +26,7 @@ jobs:
       - name: Run Pylint and update badge
         uses: Silleellie/pylint-github-action@v2.1
         with:
-          lint-path: $(git ls-files '*.py')
+          lint-path: "."
           python-version: "3.12"
           requirements-path: requirements.txt
           pylintrc-path: .pylintrc
