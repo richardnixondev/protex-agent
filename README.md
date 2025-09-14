@@ -51,7 +51,7 @@ pip install -r requirements.txt
 ```
 4 - Configure environment variables
 ```bash
-cp .env.sample .env
+cp env_sample .env
 ```
 Update .env with your broker, WebSocket, and Slack settings.
 See [Environment Variables](#-environment-variables) for details.
