@@ -1,0 +1,34 @@
+[MASTER]
+ignore=venv,.venv,tests
+jobs=1
+extension-pkg-whitelist=
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable warnings that are too noisy for this project
+disable=
+    missing-docstring,       # we already have main docstrings, but don't want to enforce all
+    too-few-public-methods,  # simple utility classes
+    too-many-arguments,      # async callbacks may need many args
+    too-many-locals,         # parsing functions may require temporary variables
+    broad-exception-caught,  # we are aware of generic try/except usage in some places
+    line-too-long            # Black/PEP8 handles formatting already
+
+[FORMAT]
+max-line-length=100
+
+[BASIC]
+good-names=i,j,k,x,y,z,_,ws,db,id
+variable-rgx=[a-z_][a-z0-9_]{1,30}$
+
+[REPORTS]
+output-format=colorized
+reports=no
+score=no
+
+[DESIGN]
+max-args=10
+max-attributes=15
+max-locals=20
+max-branches=15
+max-statements=60
