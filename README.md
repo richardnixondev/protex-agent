@@ -2,7 +2,8 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?&logo=amazon-aws&logoColor=white)
-[![pylint]()](https://github.com/youruser/protex-agent/actions)
+![PyLint]()
+
 
 A lightweight hardware monitoring agent for edge devices.  
 It collects key system metrics (CPU, RAM, Disk, GPU, agent self-metrics) and makes them available for remote monitoring via MQTT, WebSocket, and Slack alerts.
