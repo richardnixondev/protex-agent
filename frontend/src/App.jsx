@@ -10,23 +10,35 @@ import {
 } from "recharts";
 import "./App.css";
 
+// Maximum number of points kept in memory for each device history
 const MAX_POINTS = 50;
 
+/**
+ * Ensure the history object always contains an array for the given deviceId.
+ * If it doesn't exist yet, create an empty array.
+ */
 function ensureArrayHistory(prev, deviceId) {
   return prev[deviceId] ? prev : { ...prev, [deviceId]: [] };
 }
 
+/**
+ * Normalize a metric point received from the backend:
+ * - Convert timestamp into a human-readable time label.
+ * - Ensure numeric fields are coerced into numbers or null if invalid.
+ */
 function normalizePoint(p) {
-  // timestamp format
   const ts =
     typeof p.timestamp === "number"
-      ? p.timestamp * 1000
-      : Date.parse(p.timestamp) || Date.now();
+      ? p.timestamp * 1000 // if it's epoch seconds, convert to milliseconds
+      : Date.parse(p.timestamp) || Date.now(); // fallback: parse ISO string or use "now"
   const timeLabel = new Date(ts).toLocaleTimeString();
+
+  // Helper: safely convert to number or null
   const toNum = (v) =>
     v === null || v === undefined || Number.isNaN(Number(v))
       ? null
       : Number(v);
+
   return {
     ...p,
     timestampLabel: timeLabel,
@@ -38,35 +50,41 @@ function normalizePoint(p) {
 }
 
 export default function App() {
-  // histories: { deviceId: Array<point> }
+  // State to hold metrics history per device: { deviceId: Array<point> }
   const [histories, setHistories] = useState({});
-  const wsRef = useRef(null);
-  const reconnectTimer = useRef(null);
+  const wsRef = useRef(null); // Reference to the WebSocket object
+  const reconnectTimer = useRef(null); // Timer to manage auto-reconnect
 
   useEffect(() => {
+    // Function to establish WebSocket connection
     const connect = () => {
       const ws = new WebSocket("ws://localhost:6789");
       wsRef.current = ws;
 
       ws.onopen = () => {
         console.log("✅ WS connected");
+        // Clear any existing reconnect timer
         if (reconnectTimer.current) {
           clearTimeout(reconnectTimer.current);
           reconnectTimer.current = null;
         }
       };
 
+      // Handle incoming WebSocket messages
       ws.onmessage = (event) => {
         try {
-          const msg = JSON.parse(event.data);
+          const msg = JSON.parse(event.data); // expected: { deviceId: metrics }
           const entries = Object.entries(msg);
+
+          // Update histories state with new points
           setHistories((prev) => {
             let next = { ...prev };
             for (const [deviceId, pointRaw] of entries) {
               const point = normalizePoint(pointRaw);
               next = ensureArrayHistory(next, deviceId);
+
+              // Append new point, enforce history length limit
               const arr = next[deviceId].concat(point);
-              // history limit
               next[deviceId] = arr.slice(-MAX_POINTS);
             }
             return next;
@@ -76,11 +94,13 @@ export default function App() {
         }
       };
 
+      // Handle WebSocket close (lost connection) → auto-reconnect
       ws.onclose = () => {
         console.log("❌ WS disconnected — trying to reconnect in 2s…");
         reconnectTimer.current = setTimeout(connect, 2000);
       };
 
+      // Handle WebSocket errors
       ws.onerror = (err) => {
         console.error("WS error:", err);
         ws.close();
@@ -88,13 +108,15 @@ export default function App() {
     };
 
     connect();
+
+    // Cleanup on unmount: close WS and clear timers
     return () => {
       if (wsRef.current) wsRef.current.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
   }, []);
 
-  const deviceIds = Object.keys(histories);
+  const deviceIds = Object.keys(histories); // list of connected device IDs
 
   return (
     <div className="App">
@@ -105,6 +127,7 @@ export default function App() {
         const data = histories[deviceId];
         return (
           <div key={deviceId} className="device-card">
+            {/* Header with device name and last update timestamp */}
             <div className="device-header">
               <h2>{deviceId}</h2>
               {data?.length ? (
@@ -113,6 +136,8 @@ export default function App() {
                 </span>
               ) : null}
             </div>
+
+            {/* Line chart showing metrics */}
             <ResponsiveContainer width="95%" height={260}>
               <LineChart data={data}>
                 <XAxis dataKey="timestampLabel" />
