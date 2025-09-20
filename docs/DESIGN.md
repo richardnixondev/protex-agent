@@ -1,7 +1,9 @@
 ## Design Explanation
 
 #### Now:
-Hybrid strategy: Edge Devices connects to AWS IoT Core to send metrics using the MQTT protocol. The backend also connects to AWS IoT Core, makes the data available through a WebSocket, and sends alerts to Slack. The frontend consumes the exposed WebSocket.
+Hybrid strategy: Edge Devices connect to AWS IoT Core to send metrics using the MQTT protocol.The backend also connects to AWS IoT Core, makes the data available through a WebSocket, and sends alerts to Slack. The frontend consumes the exposed WebSocket.
+
+⚡ New in this iteration: the Agent implements a local offline queue — if the device loses internet connection, metrics are buffered locally (in memory) and resent when connectivity is restored. This prevents data loss and increases reliability in unstable environments.
 
 #### Production: 
 Edge Devices connects to AWS IoT Core, rules for AWS IoT replace backend, routing to Slack, storage services(if needs) and Dashboards.
@@ -9,13 +11,13 @@ Edge Devices connects to AWS IoT Core, rules for AWS IoT replace backend, routin
 ```mermaid
 flowchart TD
   subgraph Edge["**Edge Devices**"]
-    D1["**Device 1**<br/>Python Agent <br/>Cert + Key (mTLS)<br/>+ Backend + Frontend"]:::now
-    D2["**Device 2**<br/>Python Agent <br/>Cert + Key (mTLS)"]:::now
-    DN["**Device N**<br/>Python Agent <br/>Cert + Key (mTLS)"]:::now
+    D1["**Device 1**<br/>Python Agent <br/>Cert + Key (mTLS)<br/>Local Queue (resilient)<br/>+ Backend + Frontend"]:::now
+    D2["**Device 2**<br/>Python Agent <br/>Cert + Key (mTLS)<br/>Local Queue (resilient)"]:::now
+    DN["**Device N**<br/>Python Agent <br/>Cert + Key (mTLS)<br/>Local Queue (resilient)"]:::now
   end
 
   subgraph Cloud["**AWS Cloud**"]
-    IOT["**AWS IoT Core**<br/>(MQTT/TLS/ Thing Groups /<br/> Policies)"]:::now
+    IOT["**AWS IoT Core**<br/>(MQTT/TLS / Thing Groups /<br/> Policies)"]:::now
     RULES["**Rules for AWS IoT**"]:::future
     STORE["**Storage**<br/>(S3 / DynamoDB /<br/> Timestream)"]:::future
     DASH["**Dashboards**<br/>(Grafana / QuickSight)"]:::future
@@ -24,15 +26,15 @@ flowchart TD
 
   SLACK["Slack (external)"]
 
-  %% Agents publicam para AWS IoT
+  %% Agents publish to AWS IoT
   D1 --> IOT
   D2 --> IOT
   DN --> IOT
 
-  %% HOJE: backend no Device 1 envia alertas para Slack
+  %% TODAY: backend on Device 1 sends alerts to Slack
   D1 --backend alerts--> SLACK:::slack
 
-  %% FUTURO: IoT Core -> Rules -> Consumers
+  %% FUTURE: IoT Core -> Rules -> Consumers
   IOT -. future evolution .-> RULES
   RULES -.-> STORE
   RULES -.-> DASH
@@ -57,10 +59,12 @@ flowchart TD
   - Deploys `systemd` unit files and environment configs.  
   - Copies certificates and keys securely to each device.  
   - Applies updates (pull latest from repo, restart service).  
+  - ⚡ Resilient metrics pipeline: metrics are queued locally if AWS IoT Core is unreachable, avoiding data loss.
 - Benefits:  
   - Reduces manual setup.  
   - Ensures consistent configuration across all devices.  
-  - Simplifies certificate renewal and rollout.  
+  - Simplifies certificate renewal and rollout.
+  - Provides robustness even in unstable network environments.  
 
 #### Production (over 100 devices)
 - **AWS IoT Greengrass**:  
@@ -75,6 +79,8 @@ flowchart TD
 ## Trade-offs in the Hybrid Strategy
 
 * **Simplicity vs. Scalability**  
+  - ✅ Local queue avoids losing data during network outages.
+  - ❌ In-memory queue has limits (configurable max length). Persistent storage (SQLite) may be needed at scale.
   - ✅ Keeping backend and frontend on Device 1 makes the setup simple for demos and small deployments.  
   - ❌ But it doesn’t scale well to thousands of devices, since a single device becomes a central point.  
 
