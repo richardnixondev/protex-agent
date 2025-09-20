@@ -2,7 +2,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?&logo=amazon-aws&logoColor=white)
-![pylint](https://img.shields.io/badge/PyLint-9.57-yellow?logo=python&logoColor=white)
+![pylint](https://img.shields.io/badge/PyLint-9.49-yellow?logo=python&logoColor=white)
 
 
 A lightweight hardware monitoring agent for edge devices.  
