@@ -16,6 +16,15 @@ import asyncio       # For asynchronous programming (non-blocking tasks)
 import json          # For encoding/decoding messages in JSON
 import os            # For environment variables
 import time          # For timestamps and time-based pruning
+""""
+time depends on the OS clock (it may "go backward" if there is an NTP adjustment).
+ If this is critical, you can store last_seen with time.monotonic() and compare with
+time.monotonic() as well. Monotonic doesn't go backward, but it doesn't represent an epoch;
+you would have to change where last_seen is updated.
+
+"""
+
+
 
 # ----------------------------
 # Third-party imports
@@ -63,6 +72,12 @@ def active_snapshot():
     """
     Returns only devices that are "active".
     Active means: updated within the last PRUNE_SECONDS.
+
+    Parameterization: For testability, it could accept now 
+    and prune_seconds as function parameters, instead of reading globals.
+
+
+
     """
     now = time.time()
     return {
@@ -88,12 +103,13 @@ async def ws_handler(websocket):
         snap = active_snapshot()
         if snap:
             print(f"[WS] sending initial snapshot with {len(snap)} devices")
-            await websocket.send(json.dumps(snap))
+            await websocket.send(json.dumps(snap)) # backpressure
 
         async for _ in websocket:
-            pass  # We ignore messages from the frontend, only push updates
+            pass  # We ignore messages from the frontend, only push updates.
+            #If you don't need to process messages from the frontend, keeping this loop consuming prevents the receive buffer from overflowing.
     except Exception as e:
-        print(f"[WS ERROR] {e}")
+        print(f"[WS ERROR] {e}") #Captures any errors that occur while sending the snapshot or during the read loop.
     finally:
         clients.discard(websocket)
         print(f"[WS] disconnected. total={len(clients)}")
@@ -113,7 +129,7 @@ async def post_slack(text: str):
     try:
         async with aiohttp.ClientSession() as session:
             resp = await session.post(
-                SLACK_WEBHOOK_URL, json={"text": text}, timeout=10
+                SLACK_WEBHOOK_URL, json={"text": text}, timeout=10 # Slack expects a plain text field Eg.: { "text": "🚨 CPU ALERT at device-001 — CPU 95%" }
             )
             body = await resp.text()
             print(f"[SLACK] status={resp.status}, body={body}")
@@ -131,7 +147,7 @@ async def mqtt_loop():
     Connects to MQTT broker and subscribes to device metrics.
     Handles incoming messages and broadcasts them to WebSocket clients.
     """
-    client = MQTTClient("backend-bridge")
+    client = MQTTClient("backend-bridge") #In simple brokers (Mosquitto), this ID only needs to be unique per connection.
 
     # Callback when connected
     def on_connect(c, flags, rc, properties):
