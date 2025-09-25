@@ -1,4 +1,4 @@
-# Protex Agent
+# EdgeWatch
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![PyPI - Python Version](https://img.shields.io/badge/python-3.12%2B-blue)
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?&logo=amazon-aws&logoColor=white)
