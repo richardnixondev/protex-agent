@@ -49,56 +49,6 @@ flowchart TD
 ```
 
 
-## Scalability
-
-#### Now (between 20 - 60 devices)
-- Use **Ansible** for provisioning:  
-  - Automates agent installation (Python, venv, dependencies).  
-  - Deploys `systemd` unit files and environment configs.  
-  - Copies certificates and keys securely to each device.  
-  - Applies updates (pull latest from repo, restart service).  
-- Benefits:  
-  - Reduces manual setup.  
-  - Ensures consistent configuration across all devices.  
-  - Simplifies certificate renewal and rollout.  
-
-#### Production (over 100 devices)
-- **AWS IoT Greengrass**:  
-  - Distributes the agent at scale.  
-  - Manages the agent lifecycle (start, stop, update).  
-  - Supports **OTA updates** without SSH access.  
-  - Manages certificates centrally through AWS IoT Core.  
-  - Enables running Lambda functions on edge devices for local preprocessing.  
-
-
-
-## Trade-offs in the Hybrid Strategy
-
-* **Simplicity vs. Scalability**  
-  - ✅ Keeping backend and frontend on Device 1 makes the setup simple for demos and small deployments.  
-  - ❌ But it doesn’t scale well to thousands of devices, since a single device becomes a central point.  
-
-* **Local control vs. Cloud integration**  
-  - ✅ Local backend gives immediate Slack alerts and WebSocket data even if cloud connectivity is unstable.  
-  - ❌ Requires maintaining backend code on at least one device, increasing operational complexity.  
-
-* **Low latency vs. Maintainability**  
-  - ✅ Local backend reduces latency for metrics aggregation and alerting.  
-  - ❌ Cloud-native routing (via AWS IoT Rules) is easier to maintain and scale in the long run.  
-
-* **Security vs. Operational overhead**  
-  - ✅ TLS/mTLS ensures strong device identity and encrypted traffic.  
-  - ❌ Managing certificates across many devices requires automation (renewals, revocations, rotations).  
-
-* **Flexibility vs. Consistency**  
-  - ✅ Local backend can be customized (e.g., extra business logic before forwarding metrics).  
-  - ❌ Different deployments may diverge unless standardized, risking inconsistencies.  
-
-* **Cost vs. Reliability**  
-  - ✅ Running part of the system locally reduces cloud usage costs.  
-  - ❌ But puts more responsibility on devices (monitoring, logs, failures), which may be harder to manage at scale.  
-
-
 
 ## Security Considerations
 
