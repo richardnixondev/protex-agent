@@ -32,9 +32,9 @@ It collects key system metrics (CPU, RAM, Disk, GPU, agent self-metrics) and mak
 
 1 - Clone repositoy and cd to the directory:
 ```bash
-git clone https://github.com/richardnixondev/protex-agent
+git clone https://github.com/richardnixondev/EdgeWatch
 
-cd protex-agent
+cd EdgeWatch
 ```
 2 - Create and activate a virtual environment. </br>
 It’s recommended to isolate dependencies in a virtualenv:
